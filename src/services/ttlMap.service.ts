@@ -1,14 +1,15 @@
 import { TimeManagementService } from './timeManagement.service';
 import { NoKeyValuePairError } from '../errors/noKeyValuePair.error';
 
+const cleanTTLMapJobPeriod = Number(process.env.CLEAN_TTL_MAP_JOB_PERIOD) || 20000;
+
 export class TtlMapService<K extends string | number, V extends string | number> {
     constructor(private readonly timeManagementService: TimeManagementService) {
-        this.ttlMap = new Map<K, number>();
-        this.dataMap = new Map<K, V>();
+        this.dispatchCleanTTLMapJob();
     }
 
-    private ttlMap: Map<K, number>;
-    private dataMap: Map<K, V>;
+    private ttlMap: Map<K, number> = new Map<K, number>();
+    private dataMap: Map<K, V> = new Map<K, V>();
 
     public put(key: K, value: V, ttl: number | undefined = undefined) {
         this.dataMap.set(key, value);
@@ -35,5 +36,19 @@ export class TtlMapService<K extends string | number, V extends string | number>
         const isDeleted = this.dataMap.delete(key);
         if (!isDeleted) throw new NoKeyValuePairError();
         this.ttlMap.delete(key);
+    }
+
+    private dispatchCleanTTLMapJob() {
+        setTimeout(() => {
+            if (this.ttlMap.size !== 0) {
+                [...this.ttlMap]
+                    .filter(([, v]) => this.timeManagementService.getCurrentEpoch() > v)
+                    .forEach(([k]) => {
+                        this.ttlMap.delete(k);
+                        this.dataMap.delete(k);
+                    });
+            }
+            this.dispatchCleanTTLMapJob();
+        }, cleanTTLMapJobPeriod);
     }
 }

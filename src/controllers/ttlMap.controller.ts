@@ -1,4 +1,4 @@
-import {DELETE, GET, PUT, route} from 'awilix-express';
+import { DELETE, GET, PUT, route } from 'awilix-express';
 import { Request, Response } from 'express';
 import { validate } from 'class-validator';
 import { TtlMapService } from '../services/ttlMap.service';
