@@ -1,6 +1,6 @@
 import express, { Application } from 'express';
-import { loadControllers } from "awilix-express";
-import { loadContainer } from "./container";
+import { loadControllers } from 'awilix-express';
+import { loadContainer } from './container';
 
 const PORT = 3000;
 
